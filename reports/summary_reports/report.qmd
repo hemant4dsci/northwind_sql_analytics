@@ -1,38 +1,134 @@
 ---
-title: "report name"
-author: "name"
+title: "Northwind Analytics: Transforming Raw Data into Actionable Business Intelligence"
+author: "Mr. Hemant"
 date: today
 format: pdf
 toc: true
 number-sections: true
-fontsize: 11pt
+fontsize: 10pt
 ---
 
 \clearpage
 
-# Executive Summary
+# Project Overview
 
----
+Northwind Analytics provides a comprehensive analysis of the Northwind company’s sales and operations data to uncover meaningful business insights. Using data from 11 interconnected areas — including customers, products, orders, suppliers, and employees — this project translates complex information into clear, actionable findings that support smarter decision-making.
 
-# Introduction & Business Context
+The analysis focuses on identifying top-performing products, high-value customers, and key revenue regions, while also revealing opportunities to improve inventory efficiency, employee performance, and overall profitability.
 
----
-
-# Project Objectives
-
-The project aims to:
+By turning raw data into an easy-to-understand story about business performance, this project enables managers and stakeholders to make informed, evidence-based decisions that strengthen customer relationships, optimize operations, and drive sustainable growth.
 
 ---
 
 # Dataset Description
 
+The Northwind dataset is a widely used sample database representing a global trading company specializing in specialty food products. It provides a comprehensive view of business operations through 11 interconnected tables that capture key aspects of the company’s activities.
+
+The dataset includes:
+
++ **Customers:** Client information, including company names, contact details, and locations.
+
++ **Orders:** Sales transactions with order dates, shipped dates, shipping methods, and order details.
+
++ **Products & Categories:** Details about products, their classifications, and pricing.
+
++ **Suppliers:** Information about suppliers and their locations.
+
++ **Employees:** Sales representatives, their territories, and reporting structure.
+
++ **Shippers:** Companies responsible for delivering orders and their shipping details.
+
+By encompassing customers, sales, products, suppliers, employees, and shippers, the Northwind dataset enables in-depth analysis of sales performance, customer behavior, inventory management, employee productivity, shipping efficiency, and overall business operations.
+
 ---
 
-# Data Preparation & Cleaning  
+# Project Objectives
+
+The primary objective of the Northwind SQL Analytics project is to transform business data into meaningful insights that help Northwind’s management make informed, data-driven decisions. The project aims to:
+
++ Identify key revenue drivers by analyzing top-performing products, customers, and regions.
+
++ Improve operational efficiency through insights on order patterns, supplier performance, and inventory management.
+
++ Evaluate employee sales performance to recognize high achievers and identify areas for growth.
+
++ Understand customer purchasing behavior to support targeted marketing and retention strategies.
+
++ Provide a data-backed foundation for optimizing profitability, resource allocation, and strategic planning.
+
+By achieving these objectives, the project empowers stakeholders with a clear understanding of how business performance can be enhanced through the intelligent use of data.
 
 ---
 
-# Exploratory Data Analysis (EDA)  
+# Key Business Questions
+
+1. Which products and categories drive the most revenue, and how can this information guide sales and inventory strategies?
+
+2. Who are the top customers, and what portion of total sales do they represent?
+
+3. Which regions or markets contribute most to revenue, and where are the opportunities for growth?
+
+4. What proportion of sales comes from repeat customers versus new customers, and how can this inform retention efforts?
+
+5. Which products are frequently ordered together, and how can this support cross-selling or bundling strategies?
+
+6. Which products are underperforming, and how can inventory and supply chain decisions be optimized?
+
+7. How do customer purchase patterns vary, and what insights can improve engagement and marketing strategies?
+
+8. Which employees contribute most to sales, and how can performance be managed or incentivized effectively?
+
+9. How efficient are operations, including order fulfillment and shipping, and where can improvements increase profitability?
+
+10. Are there seasonal or cyclical trends in sales, and how can they inform planning and forecasting?
+
+---
+
+# Exploratory Data Analysis (EDA)
+
+## Sales & Revenue Insights
+
+**Q1: Which products and categories drive the most revenue, and how can this information guide sales and inventory strategies?**
+
+**Revenue by Products:**
+\begin{flushleft}
+\begin{tabular}{l l r r}
+\hline
+\textbf{Product Name} & \textbf{Category} & \textbf{Total Revenue (\$)} & \textbf{\% of Total Revenue} \\
+\hline
+Côte de Blaye           & Beverages      & 141,396.74 & 11.17 \\
+Thüringer Rostbratwurst & Meat/Poultry   & 80,368.67  & 6.35  \\
+Raclette Courdavault    & Dairy Products & 71,155.70  & 5.62  \\
+Tarte au sucre          & Confections    & 47,234.97  & 3.73  \\
+Camembert Pierrot       & Dairy Products & 46,825.48  & 3.70  \\
+Gnocchi di nonna Alice  & Grains/Cereals & 42,593.06  & 3.36  \\
+Manjimup Dried Apples   & Produce        & 41,819.65  & 3.30  \\
+Alice Mutton            & Meat/Poultry   & 32,698.38  & 2.58  \\
+Carnarvon Tigers        & Seafood        & 29,171.88  & 2.30  \\
+Rössle Sauerkraut       & Produce        & 25,696.64  & 2.03  \\
+\hline
+\end{tabular}
+\end{flushleft}
+
+**Revenue by Product Category:**
+\begin{flushleft}
+\begin{tabular}{lrr}
+\hline
+\textbf{Product Category} & \textbf{Total Revenue (\$)} & \textbf{Revenue Share (\%)} \\
+\hline
+Beverages       & 267,868.18 & 21.16 \\
+Dairy Products  & 234,507.29 & 18.53 \\
+Confections     & 167,357.23 & 13.22 \\
+Meat/Poultry    & 163,022.36 & 12.88 \\
+Seafood         & 131,261.74 & 10.37 \\
+Condiments      & 106,047.09 & 8.38  \\
+Produce         & 99,984.58  & 7.90  \\
+Grains/Cereals  & 95,744.59  & 7.56  \\
+\hline
+\end{tabular}
+\end{flushleft}
+
+**Insights:**
 
 ## Summary Statstics
 
