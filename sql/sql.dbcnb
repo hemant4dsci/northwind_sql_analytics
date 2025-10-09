@@ -1,40 +1,24 @@
 cells:
   - kind: 1
     languageId: markdown
-    value: Which products generated the highest revenue over time, and what trends
-      can be observed across categories?
+    value: ">#### Sales & Revenue Insights"
+    metadata: {}
+  - kind: 1
+    languageId: markdown
+    value: "Q1: Which products and categories drive the most revenue, and how can
+      this information guide sales and inventory strategies?"
     metadata: {}
   - kind: 2
     languageId: sql
     value: "WITH\r
 
-      \    revenue_over_time AS (\r
+      \    revenue_by_product AS (\r
 
       \        SELECT\r
 
       \            prd.product_name,\r
 
       \            ctg.category_name,\r
-
-      \            EXTRACT(\r
-
-      \                MONTH\r
-
-      \                FROM\r
-
-      \                    odr.order_date\r
-
-      \            ) AS order_month,\r
-
-      \            EXTRACT(\r
-
-      \                YEAR\r
-
-      \                FROM\r
-
-      \                    odr.order_date\r
-
-      \            ) AS order_year,\r
 
       \            SUM(\r
 
@@ -51,25 +35,11 @@ cells:
 
       \            JOIN categories ctg ON (prd.category_id = ctg.category_id)\r
 
-      \            JOIN orders odr ON (odd.order_id = odr.order_id)\r
-
       \        GROUP BY\r
 
       \            prd.product_name,\r
 
-      \            ctg.category_id,\r
-
-      \            order_month,\r
-
-      \            order_year\r
-
-      \        ORDER BY\r
-
-      \            order_year,\r
-
-      \            order_month,\r
-
-      \            total_revenue DESC\r
+      \            ctg.category_name\r
 
       \    )\r
 
@@ -79,28 +49,81 @@ cells:
 
       \    category_name AS product_category,\r
 
-      \    order_year,\r
+      \    ROUND(total_revenue, 2) AS total_revenue,\r
 
-      \    order_month,\r
+      \    ROUND(\r
 
-      \    ROUND(total_revenue, 2) AS total_revenue\r
+      \        total_revenue / SUM(total_revenue) OVER () * 100,\r
+
+      \        2\r
+
+      \    ) AS revenue_share\r
 
       FROM\r
 
-      \    revenue_over_time\r
+      \    revenue_by_product\r
 
       ORDER BY\r
 
-      \    order_year,\r
+      \    total_revenue DESC;"
+    metadata: {}
+  - kind: 2
+    languageId: sql
+    value: "WITH\r
 
-      \    order_month,\r
+      \    revenue_by_category AS (\r
+
+      \        SELECT\r
+
+      \            ctg.category_name,\r
+
+      \            SUM(\r
+
+      \                (odd.unit_price * odd.quantity) - (odd.unit_price *
+      odd.quantity) * odd.discount\r
+
+      \            ) AS total_revenue\r
+
+      \        FROM\r
+
+      \            public.products prd\r
+
+      \            JOIN order_details odd ON (odd.product_id = prd.product_id)\r
+
+      \            JOIN categories ctg ON (prd.category_id = ctg.category_id)\r
+
+      \        GROUP BY\r
+
+      \            ctg.category_name\r
+
+      \    )\r
+
+      SELECT\r
+
+      \    category_name AS product_category,\r
+
+      \    ROUND(total_revenue, 2) AS total_revenue,\r
+
+      \    ROUND(\r
+
+      \        total_revenue / SUM(total_revenue) OVER () * 100,\r
+
+      \        2\r
+
+      \    ) AS revenue_share\r
+
+      FROM\r
+
+      \    revenue_by_category\r
+
+      ORDER BY\r
 
       \    total_revenue DESC;"
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: Who are the top 10 customers by total spending, and how much do they
-      contribute to overall sales?
+    value: "Q2: Who are the top customers, and what portion of total sales do they
+      represent?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -131,13 +154,47 @@ cells:
 
       \            cst.company_name\r
 
+      \    ),\r
+
+      \    top_customers AS (\r
+
+      \        SELECT\r
+
+      \            customers,\r
+
+      \            ROUND(total_spending, 2) AS total_spending\r
+
+      \        FROM\r
+
+      \            customer_spending\r
+
+      \        WHERE -- top cusomers\r
+
+      \            total_spending >= (\r
+
+      \                SELECT\r
+
+      \                    PERCENTILE_CONT(0.75) WITHIN GROUP (\r
+
+      \                        ORDER BY\r
+
+      \                            total_spending\r
+
+      \                    )\r
+
+      \                FROM\r
+
+      \                    customer_spending\r
+
+      \            )\r
+
       \    )\r
 
       SELECT\r
 
-      \    customers,\r
+      \    customers AS \"Customers\",\r
 
-      \    ROUND(total_spending, 2) AS total_spending,\r
+      \    total_spending AS \"Total Spending ($)\",\r
 
       \    ROUND(\r
 
@@ -145,24 +202,147 @@ cells:
 
       \        2\r
 
-      \    ) AS spending_share\r
+      \    ) AS \"Spending Share (%)\"\r
 
       FROM\r
 
-      \    customer_spending\r
+      \    top_customers\r
 
       ORDER BY\r
 
-      \    total_spending DESC\r
+      \    total_spending DESC;"
+    metadata: {}
+  - kind: 2
+    languageId: sql
+    value: "WITH\r
 
-      LIMIT\r
+      \    customer_spending AS (\r
 
-      \    10;"
+      \        SELECT\r
+
+      \            cst.company_name AS customer,\r
+
+      \            SUM(\r
+
+      \                odd.quantity * odd.unit_price * (1 - odd.discount)\r
+
+      \            ) AS total_spending\r
+
+      \        FROM\r
+
+      \            customers cst\r
+
+      \            JOIN orders odr ON odr.customer_id = cst.customer_id\r
+
+      \            JOIN order_details odd ON odd.order_id = odr.order_id\r
+
+      \        GROUP BY\r
+
+      \            cst.company_name\r
+
+      \    ),\r
+
+      \    customer_tiers AS (\r
+
+      \        SELECT\r
+
+      \            customer,\r
+
+      \            total_spending,\r
+
+      \            CASE\r
+
+      \                WHEN CUME_DIST() OVER (\r
+
+      \                    ORDER BY\r
+
+      \                        total_spending\r
+
+      \                ) > 0.75 THEN 'Top'\r
+
+      \                WHEN CUME_DIST() OVER (\r
+
+      \                    ORDER BY\r
+
+      \                        total_spending\r
+
+      \                ) > 0.25 THEN 'Mid'\r
+
+      \                ELSE 'Low'\r
+
+      \            END AS tier\r
+
+      \        FROM\r
+
+      \            customer_spending\r
+
+      \    ),\r
+
+      \    tier_summary AS (\r
+
+      \        SELECT\r
+
+      \            tier,\r
+
+      \            COUNT(*) AS num_customers,\r
+
+      \            SUM(total_spending) AS tier_total\r
+
+      \        FROM\r
+
+      \            customer_tiers\r
+
+      \        GROUP BY\r
+
+      \            tier\r
+
+      \    ),\r
+
+      \    total_company_revenue AS (\r
+
+      \        SELECT\r
+
+      \            SUM(total_spending) AS total_revenue\r
+
+      \        FROM\r
+
+      \            customer_spending\r
+
+      \    )\r
+
+      SELECT\r
+
+      \    tier AS \"Customer Tier\",\r
+
+      \    num_customers AS \"Number of Customers\",\r
+
+      \    ROUND(tier_total, 2) AS \"Total Revenue ($)\",\r
+
+      \    ROUND(tier_total / tcr.total_revenue * 100, 2) AS \"Revenue Share
+      (%)\"\r
+
+      FROM\r
+
+      \    tier_summary ts\r
+
+      \    CROSS JOIN total_company_revenue tcr\r
+
+      ORDER BY\r
+
+      \    CASE tier\r
+
+      \        WHEN 'Top' THEN 1\r
+
+      \        WHEN 'Mid' THEN 2\r
+
+      \        ELSE 3\r
+
+      \    END;"
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: Which regions or countries contribute the most to revenue, and how does
-      their performance compare year-over-year?
+    value: "Q3: Which regions or countries contribute the most to revenue, and how
+      does their performance compare year-over-year?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -321,8 +501,8 @@ cells:
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: What percentage of revenue comes from repeat customers versus new
-      customers?
+    value: "Q4: What percentage of revenue comes from repeat customers versus new
+      customers?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -422,8 +602,12 @@ cells:
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: Which pairs or groups of products tend to be bought together based on
-      order data?
+    value: ">#### Product & Inventory Performence"
+    metadata: {}
+  - kind: 1
+    languageId: markdown
+    value: "Q5: Which pairs or groups of products tend to be bought together based
+      on order data?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -493,8 +677,8 @@ cells:
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: Which items show poor sales performance relative to their inventory
-      quantity?
+    value: "Q6: Which items show poor sales performance relative to their inventory
+      quantity?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -567,8 +751,8 @@ cells:
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: What is the average order size across product categories, and which
-      categories dominate bulk orders?
+    value: "Q7: What is the average order size across product categories, and which
+      categories dominate bulk orders?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -648,7 +832,7 @@ cells:
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: Which suppliers provide the most profitable products to the company?
+    value: "Q8: Which suppliers provide the most profitable products to the company?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -707,8 +891,12 @@ cells:
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: What is the average time gap between successive orders from the same
-      customer?
+    value: ">#### Customer & Order Behaviour"
+    metadata: {}
+  - kind: 1
+    languageId: markdown
+    value: "Q9: What is the average time gap between successive orders from the same
+      customer?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -772,8 +960,8 @@ cells:
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: Which customers have the longest relationships with the company, and what
-      is their lifetime value?
+    value: "Q10: Which customers have the longest relationships with the company,
+      and what is their lifetime value?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -829,8 +1017,8 @@ cells:
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: Which shipping method is most cost-effective based on average order value
-      and delivery frequency?
+    value: "Q11: Which shipping method is most cost-effective based on average order
+      value and delivery frequency?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -919,8 +1107,12 @@ cells:
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: Which sales representatives generate the highest revenue, and how does
-      their performance vary across different regions?
+    value: ">#### Operational Efficiency"
+    metadata: {}
+  - kind: 1
+    languageId: markdown
+    value: "Q12: Which sales representatives generate the highest revenue, and how
+      does their performance vary across different regions?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -1001,8 +1193,8 @@ cells:
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: How does the average order size and frequency vary among sales
-      representatives?
+    value: "Q13: How does the average order size and frequency vary among sales
+      representatives?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -1081,8 +1273,8 @@ cells:
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: Which employees handle the most high-value customers (based on order
-      value distribution)?
+    value: "Q14: Which employees are responsible for managing the most valuable
+      customers according to order value?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -1190,8 +1382,12 @@ cells:
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: What is the average order fulfillment time, and which shipping providers
-      perform best?
+    value: ">#### Operational Efficiency"
+    metadata: {}
+  - kind: 1
+    languageId: markdown
+    value: "Q15: What is the average order fulfillment time, and which shipping
+      providers perform best?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -1235,12 +1431,12 @@ cells:
 
       GROUP BY\r
 
-      \    shipping_company"
+      \    shipping_company;"
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: Are there seasonal trends in customer orders (e.g., spikes in certain
-      quarters)?
+    value: "Q16: Do customer orders exhibit seasonal fluctuations, such as increased
+      activity in certain quarters?"
     metadata: {}
   - kind: 2
     languageId: sql
@@ -1316,8 +1512,8 @@ cells:
     metadata: {}
   - kind: 1
     languageId: markdown
-    value: Which product categories show the highest return on investment when
-      comparing cost vs. sales revenue?
+    value: "Q17: Which product categories show the highest return on investment when
+      comparing cost vs. sales revenue?"
     metadata: {}
   - kind: 2
     languageId: sql
