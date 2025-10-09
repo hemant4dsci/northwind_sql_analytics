@@ -486,3 +486,190 @@ FROM
 ORDER BY
     net_revenue DESC,
     regions;
+
+-- Q13: How does the average order size and frequency vary among sales representatives?
+WITH
+    order_size AS (
+        SELECT
+            odr.order_id,
+            odr.employee_id,
+            ROUND(
+                SUM(
+                    odd.unit_price * odd.quantity * (1 - odd.discount)
+                ),
+                2
+            ) AS order_total
+        FROM
+            order_details odd
+            JOIN orders odr ON odr.order_id = odd.order_id
+        GROUP BY
+            odr.order_id
+    ),
+    employee_order_stats AS (
+        SELECT
+            CONCAT(emp.first_name, ' ', emp.last_name) AS employee_name,
+            COUNT(ods.order_id) AS order_frequency,
+            ROUND(AVG(ods.order_total), 2) AS average_order_size
+        FROM
+            employees emp
+            JOIN order_size ods ON ods.employee_id = emp.employee_id
+        WHERE
+            emp.title = 'Sales Representative'
+        GROUP BY
+            employee_name
+    )
+SELECT
+    employee_name,
+    order_frequency,
+    average_order_size
+FROM
+    employee_order_stats;
+
+-- Q14: Which employees are responsible for managing the most valuable customers according to order value?
+WITH
+    customer_order_total AS (
+        SELECT
+            odr.customer_id,
+            SUM(
+                odd.unit_price * odd.quantity * (1 - odd.discount)
+            ) AS total_customer_value
+        FROM
+            order_details odd
+            JOIN orders odr ON odr.order_id = odd.order_id
+        GROUP BY
+            odr.customer_id
+    ),
+    high_value_customer AS (
+        SELECT
+            customer_id,
+            total_customer_value
+        FROM
+            customer_order_total
+        WHERE
+            total_customer_value >= (
+                SELECT
+                    PERCENTILE_CONT(0.75) WITHIN GROUP (
+                        ORDER BY
+                            total_customer_value
+                    )
+                FROM
+                    customer_order_total
+            ) -- top 25% in order value
+    ),
+    employee_high_value_customers AS (
+        SELECT
+            emp.employee_id,
+            CONCAT(emp.first_name, ' ', emp.last_name) AS employee_name,
+            COUNT(DISTINCT hvc.customer_id) AS high_value_customer_count
+        FROM
+            high_value_customer hvc
+            JOIN orders odr ON odr.customer_id = hvc.customer_id
+            JOIN employees emp ON emp.employee_id = odr.employee_id
+        GROUP BY
+            emp.employee_id,
+            employee_name
+    )
+SELECT
+    employee_name,
+    high_value_customer_count
+FROM
+    employee_high_value_customers
+ORDER BY
+    high_value_customer_count DESC;
+
+--------------------------------------------------
+/*---------- OPERATIONAL EFFICIENCY ------------*/
+--------------------------------------------------
+-- Q15: What is the average order fulfillment time, and which shipping providers perform best?
+WITH
+    order_fulfillment_time AS (
+        SELECT
+            order_id,
+            ship_via,
+            CASE
+                WHEN shipped_date ISNULL THEN 0
+                ELSE shipped_date - order_date
+            END AS fulfillment_time
+        FROM
+            orders
+    )
+SELECT
+    spr.company_name AS shipping_company,
+    COUNT(oft.order_id) AS order_count,
+    ROUND(AVG(fulfillment_time), 2) AS average_fulfillment_time
+FROM
+    shippers spr
+    JOIN order_fulfillment_time oft ON spr.shipper_id = oft.ship_via
+GROUP BY
+    shipping_company;
+
+-- Q16: Do customer orders exhibit seasonal fluctuations, such as increased activity in certain quarters?
+WITH
+    quarterly_revenue AS (
+        SELECT
+            EXTRACT(
+                YEAR
+                FROM
+                    odr.order_date
+            ) AS order_year,
+            EXTRACT(
+                QUARTER
+                FROM
+                    odr.order_date
+            ) AS order_qtr,
+            SUM(
+                odd.unit_price * odd.quantity * (1 - odd.discount)
+            ) AS customer_orders
+        FROM
+            orders odr
+            JOIN order_details odd ON (odd.order_id = odr.order_id)
+        GROUP BY
+            order_year,
+            order_qtr
+    )
+SELECT
+    order_year,
+    order_qtr,
+    ROUND(AVG(customer_orders), 2) AS average_qtr_revenue
+FROM
+    quarterly_revenue
+GROUP BY
+    order_year,
+    order_qtr
+ORDER BY
+    order_year,
+    order_qtr;
+
+-- Q17: Which product categories show the highest return on investment when comparing cost vs. sales revenue?
+WITH
+    categories_cost_revenue AS (
+        SELECT
+            ctg.category_id,
+            ctg.category_name,
+            SUM(odd.quantity * prd.unit_price) AS total_cost,
+            ROUND(
+                SUM(
+                    odd.unit_price * odd.quantity * (1 - odd.discount)
+                ),
+                2
+            ) AS net_revenue
+        FROM
+            order_details odd
+            JOIN products prd ON prd.product_id = odd.product_id
+            JOIN categories ctg ON ctg.category_id = prd.category_id
+        GROUP BY
+            ctg.category_id,
+            ctg.category_name
+    )
+SELECT
+    category_name,
+    total_cost,
+    net_revenue,
+    ROUND(
+        ((net_revenue - total_cost) / total_cost) * 100,
+        2
+    ) AS category_roi
+FROM
+    categories_cost_revenue
+ORDER BY
+    category_roi DESC;
