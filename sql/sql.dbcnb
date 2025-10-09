@@ -45,11 +45,11 @@ cells:
 
       SELECT\r
 
-      \    product_name AS product,\r
+      \    product_name AS \"Product Name\",\r
 
-      \    category_name AS product_category,\r
+      \    category_name AS \"Product Category\",\r
 
-      \    ROUND(total_revenue, 2) AS total_revenue,\r
+      \    ROUND(total_revenue, 2) AS \"Total Revenue ($)\",\r
 
       \    ROUND(\r
 
@@ -57,7 +57,7 @@ cells:
 
       \        2\r
 
-      \    ) AS revenue_share\r
+      \    ) AS \"Revenue Share (%)\"\r
 
       FROM\r
 
@@ -100,9 +100,9 @@ cells:
 
       SELECT\r
 
-      \    category_name AS product_category,\r
+      \    category_name AS \"Product Category\",\r
 
-      \    ROUND(total_revenue, 2) AS total_revenue,\r
+      \    ROUND(total_revenue, 2) AS \"Total Revenue ($)\",\r
 
       \    ROUND(\r
 
@@ -110,7 +110,7 @@ cells:
 
       \        2\r
 
-      \    ) AS revenue_share\r
+      \    ) AS \"Revenue Share (%)\"\r
 
       FROM\r
 
@@ -211,133 +211,6 @@ cells:
       ORDER BY\r
 
       \    total_spending DESC;"
-    metadata: {}
-  - kind: 2
-    languageId: sql
-    value: "WITH\r
-
-      \    customer_spending AS (\r
-
-      \        SELECT\r
-
-      \            cst.company_name AS customer,\r
-
-      \            SUM(\r
-
-      \                odd.quantity * odd.unit_price * (1 - odd.discount)\r
-
-      \            ) AS total_spending\r
-
-      \        FROM\r
-
-      \            customers cst\r
-
-      \            JOIN orders odr ON odr.customer_id = cst.customer_id\r
-
-      \            JOIN order_details odd ON odd.order_id = odr.order_id\r
-
-      \        GROUP BY\r
-
-      \            cst.company_name\r
-
-      \    ),\r
-
-      \    customer_tiers AS (\r
-
-      \        SELECT\r
-
-      \            customer,\r
-
-      \            total_spending,\r
-
-      \            CASE\r
-
-      \                WHEN CUME_DIST() OVER (\r
-
-      \                    ORDER BY\r
-
-      \                        total_spending\r
-
-      \                ) > 0.75 THEN 'Top'\r
-
-      \                WHEN CUME_DIST() OVER (\r
-
-      \                    ORDER BY\r
-
-      \                        total_spending\r
-
-      \                ) > 0.25 THEN 'Mid'\r
-
-      \                ELSE 'Low'\r
-
-      \            END AS tier\r
-
-      \        FROM\r
-
-      \            customer_spending\r
-
-      \    ),\r
-
-      \    tier_summary AS (\r
-
-      \        SELECT\r
-
-      \            tier,\r
-
-      \            COUNT(*) AS num_customers,\r
-
-      \            SUM(total_spending) AS tier_total\r
-
-      \        FROM\r
-
-      \            customer_tiers\r
-
-      \        GROUP BY\r
-
-      \            tier\r
-
-      \    ),\r
-
-      \    total_company_revenue AS (\r
-
-      \        SELECT\r
-
-      \            SUM(total_spending) AS total_revenue\r
-
-      \        FROM\r
-
-      \            customer_spending\r
-
-      \    )\r
-
-      SELECT\r
-
-      \    tier AS \"Customer Tier\",\r
-
-      \    num_customers AS \"Number of Customers\",\r
-
-      \    ROUND(tier_total, 2) AS \"Total Revenue ($)\",\r
-
-      \    ROUND(tier_total / tcr.total_revenue * 100, 2) AS \"Revenue Share
-      (%)\"\r
-
-      FROM\r
-
-      \    tier_summary ts\r
-
-      \    CROSS JOIN total_company_revenue tcr\r
-
-      ORDER BY\r
-
-      \    CASE tier\r
-
-      \        WHEN 'Top' THEN 1\r
-
-      \        WHEN 'Mid' THEN 2\r
-
-      \        ELSE 3\r
-
-      \    END;"
     metadata: {}
   - kind: 1
     languageId: markdown
