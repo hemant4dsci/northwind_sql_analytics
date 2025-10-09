@@ -57,7 +57,7 @@ CREATE TABLE categories (
     category_id SMALLINT,
     category_name VARCHAR(15) NOT NULL,
     category_description TEXT,
-    picture bytea,
+    picture BYTEA,
     CONSTRAINT pk_category_id PRIMARY KEY (category_id)
 );
 
@@ -97,7 +97,7 @@ CREATE TABLE employees (
     country VARCHAR(15),
     home_phone VARCHAR(24),
     extension VARCHAR(4),
-    photo bytea,
+    photo BYTEA,
     notes TEXT,
     reports_to SMALLINT,
     photo_path VARCHAR(255),
