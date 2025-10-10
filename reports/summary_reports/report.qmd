@@ -5,7 +5,7 @@ date: today
 format: pdf
 toc: true
 number-sections: true
-fontsize: 10pt
+fontsize: 11pt
 ---
 
 \clearpage
@@ -26,17 +26,17 @@ The Northwind dataset is a widely used sample database representing a global tra
 
 The dataset includes:
 
-+ **Customers:** Client information, including company names, contact details, and locations.
++ **Customers :** Client information, including company names, contact details, and locations.
 
-+ **Orders:** Sales transactions with order dates, shipped dates, shipping methods, and order details.
++ **Orders :** Sales transactions with order dates, shipped dates, shipping methods, and order details.
 
 + **Products & Categories:** Details about products, their classifications, and pricing.
 
-+ **Suppliers:** Information about suppliers and their locations.
++ **Suppliers :** Information about suppliers and their locations.
 
-+ **Employees:** Sales representatives, their territories, and reporting structure.
++ **Employees :** Sales representatives, their territories, and reporting structure.
 
-+ **Shippers:** Companies responsible for delivering orders and their shipping details.
++ **Shippers :** Companies responsible for delivering orders and their shipping details.
 
 By encompassing customers, sales, products, suppliers, employees, and shippers, the Northwind dataset enables in-depth analysis of sales performance, customer behavior, inventory management, employee productivity, shipping efficiency, and overall business operations.
 
@@ -62,25 +62,43 @@ By achieving these objectives, the project empowers stakeholders with a clear un
 
 # Key Business Questions
 
-1. Which products and categories drive the most revenue, and how can this information guide sales and inventory strategies?
++ **Sales & Revenue Insights :**
 
-2. Who are the top customers, and what portion of total sales do they represent?
+    1. Which products and categories drive the most revenue, and how can this information guide sales and inventory strategies?
 
-3. Which regions or markets contribute most to revenue, and where are the opportunities for growth?
+    2. Who are the top customers, and what portion of total sales do they represent?
 
-4. What proportion of sales comes from repeat customers versus new customers, and how can this inform retention efforts?
+    3. Which regions or markets contribute most to revenue, and where are the opportunities for growth?
 
-5. Which products are frequently ordered together, and how can this support cross-selling or bundling strategies?
++ **Product & Inventory Performence :**
 
-6. Which products are underperforming, and how can inventory and supply chain decisions be optimized?
+    4. Which products are frequently ordered together, and how can this support cross-selling or bundling strategies?
 
-7. How do customer purchase patterns vary, and what insights can improve engagement and marketing strategies?
+    5. Which products are underperforming, and how can inventory and supply chain decisions be optimized?
 
-8. Which employees contribute most to sales, and how can performance be managed or incentivized effectively?
+    6. What is the average order size across product categories, and which categories dominate bulk orders?
 
-9. How efficient are operations, including order fulfillment and shipping, and where can improvements increase profitability?
++ **Customer & Order Behaviour :**
 
-10. Are there seasonal or cyclical trends in sales, and how can they inform planning and forecasting?
+    7. What is the average time gap between successive orders from the same customer?
+
+    8. Which customers have the longest relationships with the company, and what is their lifetime value?
+
+    9. Which shipping method is most cost-effective based on average order value and delivery frequency?
+
++ **Employee & Sales Performence :**
+
+    10. Which sales representatives generate the highest revenue, and how does their performance vary across different regions?
+    
+    11. Which employees are responsible for managing the most valuable customers according to order value?
+
++ **Operational Efficiency :**
+
+    12. What is the average order fulfillment time, and which shipping providers perform best?
+
+    13. Do customer orders exhibit seasonal fluctuations, such as increased activity in certain quarters?
+
+    14. Which product categories show the highest return on investment when comparing cost vs. sales revenue?
 
 ---
 
@@ -110,31 +128,307 @@ Rössle Sauerkraut       & Produce        & 25,696.64  & 2.03  \\
 \end{tabular}
 \end{flushleft}
 
-**Revenue by Product Category:**
+**Insights :**
+
++ Côte de Blaye (Beverages) leads with $141K revenue, contributing over 11% of total sales.
+
++ Meat/Poultry and Dairy Products appear multiple times suggesting there is strong demand for these in the market.
+
++ Top 10 products seems to be the significant portion of revenue highlighting product concentration risk.
+
++ The diversity across categories (Beverages, Dairy, Produce, Confections, Seafood) suggests opportunities for cross-category promotion and product bundling strategies.
+
+**Q2: Who are the top customers, and what portion of total sales do they represent?**
+
 \begin{flushleft}
-\begin{tabular}{lrr}
+\begin{tabular}{l r r}
 \hline
-\textbf{Product Category} & \textbf{Total Revenue (\$)} & \textbf{Revenue Share (\%)} \\
+\textbf{Customer} & \textbf{Total Spending (\$)} & \textbf{Spending Share (\%)} \\
 \hline
-Beverages       & 267,868.18 & 21.16 \\
-Dairy Products  & 234,507.29 & 18.53 \\
-Confections     & 167,357.23 & 13.22 \\
-Meat/Poultry    & 163,022.36 & 12.88 \\
-Seafood         & 131,261.74 & 10.37 \\
-Condiments      & 106,047.09 & 8.38  \\
-Produce         & 99,984.58  & 7.90  \\
-Grains/Cereals  & 95,744.59  & 7.56  \\
+QUICK-Stop                   & 110,277.31 & 12.93 \\
+Ernst Handel                 & 104,874.98 & 12.30 \\
+Save-a-lot Markets           & 104,361.95 & 12.24 \\
+Rattlesnake Canyon Grocery   & 51,097.80  & 5.99  \\
+Hungry Owl All-Night Grocers & 49,979.91  & 5.86  \\
+Hanari Carnes                & 32,841.37  & 3.85  \\
+Königlich Essen              & 30,908.38  & 3.62  \\
+Folk och fä HB               & 29,567.56  & 3.47  \\
+Mère Paillarde               & 28,872.19  & 3.39  \\
+White Clover Markets         & 27,363.61  & 3.21  \\
 \hline
 \end{tabular}
 \end{flushleft}
 
-**Insights:**
+**Insights :**
 
-## Summary Statstics
++ QUICK-Stop, Ernst Handel, and Save-a-lot Markets — together account for over 37% of total company revenue.
 
-## Univariate Analysis  
++ Mid-tier customers like Rattlesnake Canyon Grocery and Hungry Owl All-Night Grocers also contribute significantly, suggesting a stable secondary customer base.
+
++ Spending distribution indicates loyal, high-value customers that drive consistent business performance.
+
+**Q3: Which regions or markets contribute most to revenue, and where are the opportunities for growth?**
+
+\begin{flushleft}
+\begin{tabular}{p{3cm} r r}
+\toprule
+\textbf{Country} & \textbf{Revenue (\$)} & \textbf{Revenue Share (\%)} \\
+\midrule
+USA          & 245,584.61 & 19.40 \\
+Germany      & 230,284.63 & 18.19 \\
+Austria      & 128,003.84 & 10.11 \\
+Brazil       & 106,925.78 & 8.45  \\
+France       & 81,358.32  & 6.43  \\
+UK           & 58,971.31  & 4.66  \\
+Venezuela    & 56,810.63  & 4.49  \\
+Sweden       & 54,495.14  & 4.31  \\
+Canada       & 50,196.29  & 3.97  \\
+Ireland      & 49,979.91  & 3.95  \\
+Belgium      & 33,824.86  & 2.67  \\
+Denmark      & 32,661.02  & 2.58  \\
+Switzerland  & 31,692.66  & 2.50  \\
+Mexico       & 23,582.08  & 1.86  \\
+Finland      & 18,810.05  & 1.49  \\
+Spain        & 17,983.20  & 1.42  \\
+Italy        & 15,770.16  & 1.25  \\
+Portugal     & 11,472.36  & 0.91  \\
+Argentina    & 8,119.10   & 0.64  \\
+Norway       & 5,735.15   & 0.45  \\
+Poland       & 3,531.95   & 0.28  \\
+\bottomrule
+\end{tabular}
+\end{flushleft}
+
+**Insights :**
+
++ USA (19.4%), Germany (18.2%), and Austria (10.1%) together contribute nearly 48% of total revenue.
+
++ Countries like Brazil (8.5%), France (6.4%), and UK (4.7%) provide moderate but consistent revenue, suggesting these markets are stable contributors.
+
++ Current revenue distribution indicates over-reliance on top 3 markets, highlighting a need to diversify revenue streams across smaller or emerging markets to mitigate risk.
+
+\clearpage
+
+## Product & Inventory Performence
+
+**Q4: Which products are frequently ordered together, and how can this support cross-selling or bundling strategies?**
+
+\begin{flushleft}
+\begin{tabular}{l l r}
+\toprule
+\textbf{Product 1} & \textbf{Product 2} & \textbf{Times Ordered Together} \\
+\midrule
+Sir Rodney's Scones      & Sirop d'érable              & 8 \\
+Gorgonzola Telino        & Pavlova                     & 7 \\
+Pavlova                  & Tarte au sucre              & 6 \\
+Nord-Ost Matjeshering    & Tourtière                   & 6 \\
+Gorgonzola Telino        & Mozzarella di Giovanni      & 6 \\
+Camembert Pierrot        & Flotemysost                 & 6 \\
+Camembert Pierrot        & Pavlova                     & 6 \\
+Pâté chinois             & Tarte au sucre              & 5 \\
+Gorgonzola Telino        & Manjimup Dried Apples       & 5 \\
+Chang                     & Gorgonzola Telino           & 5 \\
+\bottomrule
+\end{tabular}
+\end{flushleft}
+
+**Insights :**
+
++ Sir Rodney's Scones & Sirop d'érable (8 times), Gorgonzola Telino & Pavlova (7 times), and Pavlova & Tarte au sucre (6 times) are the top product pairs frequently ordered together.
+
++ Indicates strong complementary demand, where purchasing one product increases the likelihood of buying the other.
+
++ Products like Gorgonzola Telino appear in multiple top pairs, highlighting them as key drivers of combined sales.
+
++ Customers tend to order desserts and complementary ingredients together, showing a preference for themed or complete meal solutions.
+
+
+**Q5: Which products are underperforming, and how can inventory and supply chain decisions be optimized?**
+
+\begin{flushleft}
+\begin{tabular}{l r r}
+\toprule
+\textbf{Product Name} & \textbf{Units in Stock} & \textbf{Total Revenue (\$)} \\
+\midrule
+Rhönbräu Klosterbier            & 125 & 8,177.49  \\
+Boston Crab Meat                & 123 & 17,910.63 \\
+Grandma's Boysenberry Spread    & 120 & 7,137.00  \\
+Pâté chinois                     & 115 & 17,426.40 \\
+Sirop d'érable                   & 113 & 14,352.60 \\
+Geitost                          & 112 & 1,648.13  \\
+Inlagd Sill                       & 112 & 13,458.46 \\
+Sasquatch Ale                     & 111 & 6,350.40  \\
+Gustaf's Knäckebröd               & 104 & 7,122.36  \\
+Röd Kaviar                        & 101 & 3,997.20  \\
+\bottomrule
+\end{tabular}
+\end{flushleft}
+
+**Insights :**
+
++ Boston Crab Meat ($17,910.63), Pâté chinois ($17,426.40), Sirop d’érable ($14,352.60), and Inlagd Sill ($13,458.46) generate the most revenue, indicating strong sales performance.
+
++ Geitost ($1,648.13) and Röd Kaviar ($3,997.20) have relatively low revenue despite decent stock, suggesting slow-moving inventory.
+
++ Products like Boston Crab Meat and Pâté chinois are high-revenue items; ensure sufficient inventory to meet demand.
+
++ Conversely, low-revenue items could be promoted or discounted to free up storage space.
+
++ Items with high revenue per unit in stock (like Pâté chinois, Sirop d'érable) could be prioritized for marketing campaigns and bundle promotions.
+
+**Q6: What is the average order size across product categories, and which categories dominate bulk orders?**
    
-## Time-Series Analysis  
+\begin{flushleft}
+\begin{tabular}{l r r}
+\toprule
+\textbf{Product Category} & \textbf{Average Order Size} & \textbf{Number of Orders} \\
+\midrule
+Beverages       & 26.93 & 354 \\
+Dairy Products  & 30.19 & 303 \\
+Confections     & 26.80 & 295 \\
+Seafood         & 26.40 & 291 \\
+Condiments      & 27.45 & 193 \\
+Grains/Cereals  & 25.07 & 182 \\
+Meat/Poultry    & 26.08 & 161 \\
+Produce         & 23.18 & 129 \\
+\bottomrule
+\end{tabular}
+\end{flushleft}
+
+**Insights :**
+
++ Dairy Products (30.19) and Condiments (27.45) have the largest average order sizes, suggesting bulk orders are more common in these categories.
+
++ Beverages (354 orders), Dairy Products (303), and Confections (295) dominate in order frequency, indicating high customer demand across these categories.
+
++ Produce (23.18) and Grains/Cereals (25.07) have the smallest average order sizes, reflecting either smaller packaging or individual item purchases.
+
++ Focus inventory planning on high-volume categories to avoid stockouts.
+
++ Consider promotional bundles for bulk-order categories like Dairy Products and Condiments to maximize revenue per order.
+
+## Customer & Order Behaviour
+
+**Q7: What is the average time gap between successive orders from the same customer?**
+
+\begin{flushleft}
+\begin{tabular}{l r}
+\toprule
+\textbf{Customer Name} & \textbf{Average Order Days Frequency} \\
+\midrule
+GROSELLA-Restaurante                  & 253.00 \\
+Bólido Comidas preparadas             & 176.67 \\
+The Big Cheese                        & 139.50 \\
+Ana Trujillo Emparedados y helados    & 133.00 \\
+Du monde entier                        & 128.50 \\
+North/South                           & 123.33 \\
+Romero y tomillo                       & 120.60 \\
+Comércio Mineiro                        & 120.60 \\
+Consolidated Holdings                  & 117.67 \\
+Morgenstern Gesundkost                 & 116.00 \\
+\bottomrule
+\end{tabular}
+\end{flushleft}
+
+**Insights :**
+
++ GROSELLA-Restaurante (253 days) and Bólido Comidas preparadas (176.67 days) have the longest intervals between orders, indicating infrequent purchasing patterns.
+
++ Customers like The Big Cheese (139.5 days) and Ana Trujillo Emparedados y helados (133 days) place orders occasionally, suggesting stable but less frequent demand.
+
++ Morgenstern Gesundkost (116 days) and Consolidated Holdings (117.67 days) are among the most frequent buyers, highlighting loyalty and regular demand.
+
++ Target infrequent customers with promotions or reminders to increase order frequency.
+
++ Reward frequent customers to maintain loyalty and encourage consistent purchase behavior.
+
+**Q8: Which customers have the longest relationships with the company, and what is their lifetime value?**
+
+\begin{flushleft}
+\begin{tabular}{l r r}
+\toprule
+\textbf{Customer} & \textbf{Relationship Period (Days)} & \textbf{Lifetime Value (\$)} \\
+\midrule
+Richter Supermarkt           & 663 & 19,343.78  \\
+Hanari Carnes                & 658 & 32,841.37  \\
+Ernst Handel                 & 657 & 104,874.98 \\
+Rattlesnake Canyon Grocery    & 653 & 51,097.80  \\
+Suprêmes délices             & 651 & 24,088.78  \\
+HILARION-Abastos             & 651 & 22,768.76  \\
+Chop-suey Chinese            & 650 & 12,348.88  \\
+Folk och fä HB               & 642 & 29,567.56  \\
+White Clover Markets         & 639 & 27,363.61  \\
+Ottilies Käseladen           & 634 & 12,496.20  \\
+\bottomrule
+\end{tabular}
+\end{flushleft}
+
+**Insights :**
+
++ Richter Supermarkt (663 days), Hanari Carnes (658 days), and Ernst Handel (657 days) have the longest-standing relationships with the company, indicating high customer loyalty.
+
++ Ernst Handel ($104,874.98) is the top contributor to revenue, despite having a similar relationship period as other customers.
+
++ Rattlesnake Canyon Grocery ($51,097.80) and Hanari Carnes ($32,841.37) are also high-value long-term customers.
+
++ Customers like Suprêmes délices, HILARION-Abastos, Folk och fä HB, and White Clover Markets have moderate lifetime value but long relationships, highlighting opportunities to upsell or increase engagement.
+
+**Q9: Which shipping method is most cost-effective based on average order value and delivery frequency?**
+
+\begin{flushleft}
+\begin{tabular}{p{3cm} r r r}  % first column wraps
+\toprule
+Shipping Method & 
+Average Order \par Value (\$) & 
+Delivery \par Frequency & 
+Cost per \par Order (\$) \\
+\midrule
+United Package    & 8.92  & 86.64 & 5.02 \\
+Speedy Express    & 8.43  & 65.00 & 5.63 \\
+Federal Shipping  & 7.30  & 80.44 & 5.90 \\
+\bottomrule
+\end{tabular}
+\end{flushleft}
+
+**Insights :**
+
++ United Package has the highest delivery frequency (86.64) with a moderate average order value ($8.92) and the lowest cost per order ($5.02), making it the most cost-effective option.
+
++ Speedy Express has a slightly lower average order value ($8.43) and lower delivery frequency (65) with higher cost per order ($5.63), making it less efficient than United Package.
+
++ Federal Shipping delivers more frequently than Speedy Express (80.44) but has the highest cost per order ($5.90) and lowest average order value ($7.30), making it the least cost-effective.
+
+## Employee & Sales Performence
+
+**Q10: Which sales representatives generate the highest revenue, and how does their performance vary across different regions?**
+
+\begin{flushleft}
+\begin{tabular}{l l r r}
+\toprule
+\textbf{Employee Name} & \textbf{Region} & \textbf{Net Revenue (\$)} & \textbf{Revenue Share (\%)} \\
+\midrule
+Robert King        & Western  & 1,245,682.35 & 30.75 \\
+Janet Leverling    & Southern & 811,251.37   & 20.03 \\
+Margaret Peacock   & Eastern  & 698,672.54   & 17.25 \\
+Anne Dodsworth     & Northern & 541,156.47   & 13.36 \\
+Nancy Davolio      & Eastern  & 384,215.21   & 9.49  \\
+Michael Suyama     & Western  & 369,565.65   & 9.12  \\
+\bottomrule
+\end{tabular}
+\end{flushleft}
+
+
+**Insights :**
+
++ Robert King (Western, 30.75%) is the highest revenue generator, followed by Janet Leverling (Southern, 20.03%) and Margaret Peacock (Eastern, 17.25%).
+
++ These three employees together contribute nearly 68% of total sales, highlighting their critical impact on revenue.
+
++ The Western region leads in revenue, largely due to Robert King’s performance, while Northern and Eastern regions have lower individual contributions despite multiple employees.
+
++ High dependency on top performers, especially Robert King, suggests a potential risk if performance drops or turnover occurs.
+
+**Q11: Which employees are responsible for managing the most valuable customers according to order value?**
 
 ## Hypothesis Testing
 
@@ -145,6 +439,8 @@ Grains/Cereals  & 95,744.59  & 7.56  \\
 ---
 
 # Recommendations
+
++ 
 
 ---
 
