@@ -1,60 +1,46 @@
 -----------------------------------------------------
 /*----------- SALES & REVENUE INSIGHTS ------------*/
------------------------------------------------------ 
--- Q1: Which products generated the highest revenue over time, and what trends can be observed across categories?
+-----------------------------------------------------
+
+-- Q1: Which products and categories drive the most revenue, and how can this information guide sales and inventory strategies?
+
 WITH
-    revenue_over_time AS (
+    revenue_by_product AS (
         SELECT
             prd.product_name,
             ctg.category_name,
-            EXTRACT(
-                MONTH
-                FROM
-                    odr.order_date
-            ) AS order_month,
-            EXTRACT(
-                YEAR
-                FROM
-                    odr.order_date
-            ) AS order_year,
             SUM(
-                (odd.unit_price * odd.quantity) - (odd.unit_price * odd.quantity) * odd.discount
+                odd.unit_price * odd.quantity * (1 - odd.discount)
             ) AS total_revenue
         FROM
             public.products prd
             JOIN order_details odd ON (odd.product_id = prd.product_id)
             JOIN categories ctg ON (prd.category_id = ctg.category_id)
-            JOIN orders odr ON (odd.order_id = odr.order_id)
         GROUP BY
             prd.product_name,
-            ctg.category_id,
-            order_month,
-            order_year
-        ORDER BY
-            order_year,
-            order_month,
-            total_revenue DESC
+            ctg.category_name
     )
 SELECT
-    product_name AS product,
-    category_name AS product_category,
-    order_year,
-    order_month,
-    ROUND(total_revenue, 2) AS total_revenue
+    product_name AS "Product Name",
+    category_name AS "Product Category",
+    ROUND(total_revenue, 2) AS "Total Revenue ($)",
+    ROUND(
+        total_revenue / SUM(total_revenue) OVER () * 100,
+        2
+    ) AS "Revenue Share (%)"
 FROM
-    revenue_over_time
+    revenue_by_product
 ORDER BY
-    order_year,
-    order_month,
     total_revenue DESC;
 
--- Q2: Who are the top 10 customers by total spending, and how much do they contribute to overall sales?
+-- Q2: Who are the top customers, and what portion of total sales do they represent?
+
 WITH
     customer_spending AS (
         SELECT
             cst.company_name as customers,
             SUM(
-                (odd.quantity * odd.unit_price) - (odd.quantity * odd.unit_price) * odd.discount
+                odd.quantity * odd.unit_price * (1 - odd.discount)
             ) AS total_spending
         FROM
             customers cst
@@ -62,34 +48,45 @@ WITH
             JOIN order_details odd ON (odd.order_id = odr.order_id)
         GROUP BY
             cst.company_name
+    ),
+    top_customers AS (
+        SELECT
+            customers,
+            ROUND(total_spending, 2) AS total_spending
+        FROM
+            customer_spending
+        WHERE -- top cusomers
+            total_spending >= (
+                SELECT
+                    PERCENTILE_CONT(0.75) WITHIN GROUP (
+                        ORDER BY
+                            total_spending
+                    )
+                FROM
+                    customer_spending
+            )
     )
 SELECT
-    customers,
-    ROUND(total_spending, 2) AS total_spending,
+    customers AS "Customers",
+    total_spending AS "Total Spending ($)",
     ROUND(
         total_spending / SUM(total_spending) OVER () * 100,
         2
-    ) AS spending_share
+    ) AS "Spending Share (%)"
 FROM
-    customer_spending
+    top_customers
 ORDER BY
-    total_spending DESC
-LIMIT
-    10;
+    total_spending DESC;
 
--- Q3: Which regions or countries contribute the most to revenue, and how does their performance compare year-over-year?
+-- Q3: Which countries or markets contribute most to revenue, and where are the opportunities for growth?
+
 WITH
     country_revenue AS (
         SELECT
             odr.ship_country AS countries,
-            EXTRACT(
-                YEAR
-                FROM
-                    odr.order_date
-            ) AS order_year,
             ROUND(
                 SUM(
-                    (odd.unit_price * odd.quantity) - (odd.unit_price * odd.quantity) * odd.discount
+                    odd.unit_price * odd.quantity * (1 - odd.discount)
                 ),
                 2
             ) AS total_revenue
@@ -97,118 +94,28 @@ WITH
             order_details odd
             JOIN orders odr ON (odd.order_id = odr.order_id)
         GROUP BY
-            countries,
-            order_year
-        ORDER BY
-            order_year,
-            total_revenue
-    ),
-    revenue_yoy AS (
-        SELECT
-            countries,
-            SUM(
-                CASE
-                    WHEN order_year = 1996 THEN total_revenue
-                    ELSE 0
-                END
-            ) AS revenue_1996,
-            SUM(
-                CASE
-                    WHEN order_year = 1997 THEN total_revenue
-                    ELSE 0
-                END
-            ) AS revenue_1997,
-            SUM(
-                CASE
-                    WHEN order_year = 1998 THEN total_revenue
-                    ELSE 0
-                END
-            ) AS revenue_1998
-        FROM
-            country_revenue
-        GROUP BY
             countries
     )
 SELECT
-    countries,
-    revenue_1996,
-    revenue_1997,
-    revenue_1998,
-    CASE
-        WHEN revenue_1996 = 0 THEN 0
-        ELSE ROUND(
-            (revenue_1997 - revenue_1996) / revenue_1996 * 100,
-            2
-        )
-    END AS yoy_1997vs1996,
-    CASE
-        WHEN revenue_1997 = 0 THEN 0
-        ELSE ROUND(
-            (revenue_1998 - revenue_1997) / revenue_1997 * 100,
-            2
-        )
-    END AS yoy_1998vs1997
-FROM
-    revenue_yoy
-ORDER BY
-    revenue_1996 DESC,
-    revenue_1997 DESC,
-    revenue_1998 DESC;
-
--- Q4: What percentage of revenue comes from repeat customers vs. new customers?
-WITH
-    first_order AS (
-        SELECT
-            customer_id,
-            MIN(order_date) AS first_order_date
-        FROM
-            orders
-        GROUP BY
-            customer_id
-    ),
-    customer_revenue AS (
-        SELECT
-            odr.customer_id,
-            SUM(
-                (odd.unit_price * odd.quantity) - (odd.unit_price * odd.quantity) * odd.discount
-            ) AS total_revenue,
-            CASE
-                WHEN odr.order_date = fod.first_order_date THEN 'New Customer'
-                ELSE 'Repeat Customer'
-            END AS customer_type
-        FROM
-            orders odr
-            JOIN order_details odd ON (odd.order_id = odr.order_id)
-            JOIN first_order fod ON (fod.customer_id = odr.customer_id)
-        GROUP BY
-            odr.customer_id,
-            customer_type
-    ),
-    customer_type_revenue AS (
-        SELECT
-            customer_type,
-            SUM(total_revenue) AS total_revenue
-        FROM
-            customer_revenue
-        GROUP BY
-            customer_type
-    )
-SELECT
-    customer_type,
-    total_revenue,
+    countries AS "Countries",
+    total_revenue AS "Total Revenue ($)",
     ROUND(
-        (total_revenue / SUM(total_revenue) OVER ()) * 100,
+        total_revenue / SUM(total_revenue) OVER () * 100,
         2
-    ) AS revenue_percentage
+    ) AS "Revenue Share (%)"
 FROM
-    customer_type_revenue;
+    country_revenue
+ORDER BY
+    total_revenue DESC;
 
 ---------------------------------------------------------
 /*---------- PRODUCT & INVENTORY PERFORMENCE ----------*/
 ---------------------------------------------------------
--- Q5: Which pairs or groups of products tend to be bought together based on order data?
+
+-- Q4: Which products are frequently ordered together, and how can this support cross-selling or bundling strategies?
+
 WITH
-    first_products AS (
+    product_orders AS (
         SELECT
             odd.order_id,
             prd.product_name
@@ -216,38 +123,38 @@ WITH
             order_details odd
             JOIN products prd ON (odd.product_id = prd.product_id)
     ),
-    second_products AS (
+    bundled_order AS (
         SELECT
-            odd.order_id,
-            prd.product_name
+            pdo.product_name AS first_product,
+            prd.product_name AS second_product,
+            COUNT(*) AS order_count
         FROM
             order_details odd
             JOIN products prd ON (odd.product_id = prd.product_id)
+            JOIN product_orders pdo ON pdo.order_id = odd.order_id
+            AND pdo.product_name < prd.product_name
+        GROUP BY
+            pdo.product_name,
+            prd.product_name
     )
 SELECT
-    fpd.product_name AS product_one,
-    spd.product_name AS product_two,
-    COUNT(*) AS times_order_together
+    first_product AS "Product 1",
+    second_product AS "Product 2",
+    order_count AS "Times Ordered Together"
 FROM
-    first_products fpd
-    JOIN second_products spd ON fpd.order_id = spd.order_id
-    AND fpd.product_name < spd.product_name
-GROUP BY
-    fpd.product_name,
-    spd.product_name
+    bundled_order
 ORDER BY
-    times_order_together DESC
+    order_count DESC
 LIMIT
     10;
 
--- Q6: Which items show poor sales performance relative to their inventory quantity?
+-- Q5: Which products are underperforming, and how can inventory and supply chain decisions be optimized?
+
 WITH
     sales_data AS (
         SELECT
             product_id,
-            SUM(
-                (unit_price * quantity) - (unit_price * quantity) * discount
-            ) AS total_revenue
+            SUM(unit_price * quantity * (1 - discount)) AS total_revenue
         FROM
             order_details
         GROUP BY
@@ -262,10 +169,9 @@ WITH
             products -- or products table with inventory info
     )
 SELECT
-    inv.product_id,
-    inv.product_name,
-    inv.units_in_stock,
-    sls.total_revenue
+    inv.product_name AS "Product Name",
+    inv.units_in_stock AS "Units in Stock",
+    ROUND(sls.total_revenue, 2) AS "Total Revenue"
 FROM
     inventory_data inv
     JOIN sales_data sls ON inv.product_id = sls.product_id
@@ -275,7 +181,8 @@ ORDER BY
 LIMIT
     10;
 
--- Q7: What is the average order size across product categories, and which categories dominate bulk orders?
+-- Q6: What is the average order size across product categories, and which categories dominate bulk orders?
+
 WITH
     category_order_size AS (
         SELECT
@@ -306,46 +213,20 @@ WITH
             category_name
     )
 SELECT
-    category_name,
-    average_order_size,
-    bulk_order_count
+    category_name AS "Product Category",
+    average_order_size AS "Average Order Size",
+    bulk_order_count AS "Bulk Order Count"
 FROM
     category_bulk_order
 ORDER BY
     bulk_order_count DESC;
 
--- Q8: Which suppliers provide the most profitable products to the company?
-WITH
-    supplier_classified AS (
-        SELECT
-            spl.company_name AS supplier,
-            ROUND(SUM(prd.unit_price * odd.quantity), 2) AS total_cost,
-            ROUND(SUM(odd.unit_price * odd.quantity), 2) AS total_sales,
-            ROUND(
-                SUM((odd.unit_price * odd.quantity) * odd.discount),
-                2
-            ) AS discount_amount
-        FROM
-            order_details odd
-            JOIN products prd ON (odd.product_id = prd.product_id)
-            JOIN suppliers spl ON (spl.supplier_id = prd.supplier_id)
-        GROUP BY
-            spl.company_name
-    )
-SELECT
-    supplier,
-    ((total_sales - total_cost) - discount_amount) as net_profit
-FROM
-    supplier_classified
-ORDER BY
-    net_profit DESC
-LIMIT
-    10;
-
 ---------------------------------------------------
 /*---------- CUSTOMER & ORDER BEHAVIOUR ----------*/
 ---------------------------------------------------
--- Q9: What is the average time gap between successive orders from the same customer?
+
+-- Q7: What is the average time gap between successive orders from the same customer?
+
 WITH
     order_frequency AS (
         SELECT
@@ -365,45 +246,52 @@ WITH
             JOIN customers cst ON odr.customer_id = cst.customer_id
     )
 SELECT
-    customer_name,
-    ROUND(AVG(days_frequency), 2) AS avg_order_days_frequency
+    customer_name AS "Customer Name",
+    ROUND(AVG(days_frequency), 2) AS "AVG Order Day Frequency"
 FROM
     order_frequency
 GROUP BY
     customer_name
 ORDER BY
-    avg_order_days_frequency DESC
+    "AVG Order Day Frequency" DESC
 LIMIT
     10;
 
--- Q10: Which customers have the longest relationships with the company, and what is their lifetime value?
+-- Q8: Which customers have the longest relationships with the company, and what is their lifetime value?
+
 WITH
     customer_relation AS (
         SELECT
-            cst.company_name AS customer,
+            cst.company_name AS customer_name,
             MIN(odr.order_date) AS first_order,
             MAX(odr.order_date) AS recent_order,
-            SUM(odd.unit_price * odd.quantity) AS life_time_value
+            ROUND(
+                SUM(
+                    odd.unit_price * odd.quantity * (1 - odd.discount)
+                ),
+                2
+            ) AS life_time_value
         FROM
             order_details odd
             JOIN orders odr ON odr.order_id = odd.order_id
             JOIN customers cst ON cst.customer_id = odr.customer_id
         GROUP BY
-            customer
+            customer_name
     )
 SELECT
-    customer,
-    (recent_order - first_order) AS relation_period,
-    life_time_value
+    customer_name AS "Customer Name",
+    (recent_order - first_order) AS "Relation Period",
+    life_time_value AS "Life Time Value"
 FROM
     customer_relation
 ORDER BY
-    relation_period DESC,
-    life_time_value DESC
+    "Relation Period" DESC,
+    "Life Time Value" DESC
 LIMIT
     10;
 
--- Q11: Which shipping method is most cost-effective based on average order value and delivery frequency?
+-- Q9: Which shipping method is most cost-effective based on average order value and delivery frequency?
+
 WITH
     order_total AS (
         SELECT
@@ -439,17 +327,19 @@ WITH
             shipping_company
     )
 SELECT
-    shipping_company,
-    delivery_duration,
-    shipping_charges,
-    cost_effectiveness
+    shipping_company AS "Shipping Company",
+    delivery_duration AS "Delivery Duration",
+    shipping_charges AS "Shipping Charges",
+    cost_effectiveness AS "Cost Effectiveness"
 FROM
     shippers_stats;
 
 ------------------------------------------------
-/*---------- OPERATIONAL EFFICIENCY ----------*/
+/*------- Employee & Sales Performence -------*/
 ------------------------------------------------
--- Q12 : Which sales representatives generate the highest revenue, and how does their performance vary across different regions?
+
+-- Q10: Which sales representatives generate the highest revenue, and how does their performance vary across different regions?
+
 WITH
     employee_revenue AS (
         SELECT
@@ -477,55 +367,18 @@ WITH
             regions
     )
 SELECT
-    employee_name,
-    regions,
-    net_revenue,
-    ROUND((net_revenue / SUM(net_revenue) OVER () * 100), 2) AS revenue_share
+    employee_name AS "Employee Name",
+    regions AS "Regions",
+    net_revenue AS "Net Revenue ($)",
+    ROUND((net_revenue / SUM(net_revenue) OVER () * 100), 2) AS "Revenue Share (%)"
 FROM
     employee_revenue
 ORDER BY
     net_revenue DESC,
     regions;
 
--- Q13: How does the average order size and frequency vary among sales representatives?
-WITH
-    order_size AS (
-        SELECT
-            odr.order_id,
-            odr.employee_id,
-            ROUND(
-                SUM(
-                    odd.unit_price * odd.quantity * (1 - odd.discount)
-                ),
-                2
-            ) AS order_total
-        FROM
-            order_details odd
-            JOIN orders odr ON odr.order_id = odd.order_id
-        GROUP BY
-            odr.order_id
-    ),
-    employee_order_stats AS (
-        SELECT
-            CONCAT(emp.first_name, ' ', emp.last_name) AS employee_name,
-            COUNT(ods.order_id) AS order_frequency,
-            ROUND(AVG(ods.order_total), 2) AS average_order_size
-        FROM
-            employees emp
-            JOIN order_size ods ON ods.employee_id = emp.employee_id
-        WHERE
-            emp.title = 'Sales Representative'
-        GROUP BY
-            employee_name
-    )
-SELECT
-    employee_name,
-    order_frequency,
-    average_order_size
-FROM
-    employee_order_stats;
+-- Q11: Which employees are responsible for managing the most valuable customers according to order value?
 
--- Q14: Which employees are responsible for managing the most valuable customers according to order value?
 WITH
     customer_order_total AS (
         SELECT
@@ -570,8 +423,8 @@ WITH
             employee_name
     )
 SELECT
-    employee_name,
-    high_value_customer_count
+    employee_name AS "Employee Name",
+    high_value_customer_count AS "High Value Customer Count"
 FROM
     employee_high_value_customers
 ORDER BY
@@ -580,30 +433,9 @@ ORDER BY
 --------------------------------------------------
 /*---------- OPERATIONAL EFFICIENCY ------------*/
 --------------------------------------------------
--- Q15: What is the average order fulfillment time, and which shipping providers perform best?
-WITH
-    order_fulfillment_time AS (
-        SELECT
-            order_id,
-            ship_via,
-            CASE
-                WHEN shipped_date ISNULL THEN 0
-                ELSE shipped_date - order_date
-            END AS fulfillment_time
-        FROM
-            orders
-    )
-SELECT
-    spr.company_name AS shipping_company,
-    COUNT(oft.order_id) AS order_count,
-    ROUND(AVG(fulfillment_time), 2) AS average_fulfillment_time
-FROM
-    shippers spr
-    JOIN order_fulfillment_time oft ON spr.shipper_id = oft.ship_via
-GROUP BY
-    shipping_company;
 
--- Q16: Do customer orders exhibit seasonal fluctuations, such as increased activity in certain quarters?
+-- Q12: Do customer orders exhibit seasonal fluctuations, such as increased activity in certain quarters?
+
 WITH
     quarterly_revenue AS (
         SELECT
@@ -628,9 +460,9 @@ WITH
             order_qtr
     )
 SELECT
-    order_year,
-    order_qtr,
-    ROUND(AVG(customer_orders), 2) AS average_qtr_revenue
+    order_year AS "Order Year",
+    order_qtr AS "Order Qtr",
+    ROUND(AVG(customer_orders), 2) AS "AVG Qtr Revenue"
 FROM
     quarterly_revenue
 GROUP BY
@@ -640,7 +472,8 @@ ORDER BY
     order_year,
     order_qtr;
 
--- Q17: Which product categories show the highest return on investment when comparing cost vs. sales revenue?
+-- Q13: Which product categories show the highest return on investment when comparing cost vs. sales revenue?
+
 WITH
     categories_cost_revenue AS (
         SELECT
@@ -662,14 +495,12 @@ WITH
             ctg.category_name
     )
 SELECT
-    category_name,
-    total_cost,
-    net_revenue,
+    category_name AS "Product Category",
     ROUND(
         ((net_revenue - total_cost) / total_cost) * 100,
         2
-    ) AS category_roi
+    ) AS "Category ROI"
 FROM
     categories_cost_revenue
 ORDER BY
-    category_roi DESC;
+    "Category ROI" DESC;
