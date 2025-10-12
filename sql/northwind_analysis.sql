@@ -1,9 +1,7 @@
 -----------------------------------------------------
 /*----------- SALES & REVENUE INSIGHTS ------------*/
 -----------------------------------------------------
-
 -- Q1: Which products and categories drive the most revenue, and how can this information guide sales and inventory strategies?
-
 WITH
     revenue_by_product AS (
         SELECT
@@ -34,7 +32,6 @@ ORDER BY
     total_revenue DESC;
 
 -- Q2: Who are the top customers, and what portion of total sales do they represent?
-
 WITH
     customer_spending AS (
         SELECT
@@ -49,47 +46,35 @@ WITH
         GROUP BY
             cst.company_name
     ),
-    percentile_thresholds AS (
+    top_customers AS (
         SELECT
-            PERCENTILE_CONT(0.25) WITHIN GROUP (
-                ORDER BY
-                    total_spending
-            ) AS pct_25,
-            PERCENTILE_CONT(0.75) WITHIN GROUP (
-                ORDER BY
-                    total_spending
-            ) AS pct_75
+            *
         FROM
             customer_spending
-    ),
-    customer_category_revenue AS (
-        SELECT
-            CASE
-                WHEN total_spending >= pct_75 THEN 'Top Customer'
-                WHEN total_spending >= pct_25 THEN 'Mid Customer'
-                ELSE 'Low Customer'
-            END AS customer_category,
-            ROUND(SUM(total_spending), 2) AS total_spending
-        FROM
-            customer_spending,
-            percentile_thresholds
-        GROUP BY
-            customer_category
+        WHERE
+            total_spending >= (
+                SELECT
+                    PERCENTILE_CONT(0.75) WITHIN GROUP (
+                        ORDER BY
+                            total_spending
+                    )
+                FROM
+                    customer_spending
+            )
     )
 SELECT
-    customer_category AS "Customer Category",
+    customers AS "Customer Name",
     total_spending AS "Total Spending",
     ROUND(
         total_spending / SUM(total_spending) OVER () * 100,
         2
     ) AS "Spending Share"
 FROM
-    customer_category_revenue
+    top_customers
 ORDER BY
-    "Total Spending" DESC;
+    total_spending DESC;
 
 -- Q3: Which countries or markets contribute most to revenue, and where are the opportunities for growth?
-
 WITH
     country_revenue AS (
         SELECT
@@ -121,9 +106,7 @@ ORDER BY
 ---------------------------------------------------------
 /*---------- PRODUCT & INVENTORY PERFORMENCE ----------*/
 ---------------------------------------------------------
-
 -- Q4: Which products are frequently ordered together, and how can this support cross-selling or bundling strategies?
-
 WITH
     product_orders AS (
         SELECT
@@ -159,7 +142,6 @@ LIMIT
     10;
 
 -- Q5: Which products are underperforming, and how can inventory and supply chain decisions be optimized?
-
 WITH
     sales_data AS (
         SELECT
@@ -192,7 +174,6 @@ LIMIT
     10;
 
 -- Q6: What is the average order size across product categories, and which categories dominate bulk orders?
-
 WITH
     category_order_size AS (
         SELECT
@@ -234,16 +215,14 @@ ORDER BY
 ---------------------------------------------------
 /*---------- CUSTOMER & ORDER BEHAVIOUR ----------*/
 ---------------------------------------------------
-
 -- Q7: What is the average time gap between successive orders from the same customer?
-
 WITH
     order_frequency AS (
         SELECT
             cst.company_name AS customer_name,
             odr.order_date,
             COALESCE(
-                odr.order_date - LAG(odr.order_date) OVER (
+                odr.order_date - LAG (odr.order_date) OVER (
                     PARTITION BY
                         cst.company_name
                     ORDER BY
@@ -268,7 +247,6 @@ LIMIT
     10;
 
 -- Q8: Which customers have the longest relationships with the company, and what is their lifetime value?
-
 WITH
     customer_relation AS (
         SELECT
@@ -301,7 +279,6 @@ LIMIT
     10;
 
 -- Q9: Which shipping method is most cost-effective based on average order value and delivery frequency?
-
 WITH
     order_total AS (
         SELECT
@@ -347,14 +324,12 @@ FROM
 ------------------------------------------------
 /*------- Employee & Sales Performence -------*/
 ------------------------------------------------
-
 -- Q10: Which sales representatives generate the highest revenue, and how does their performance vary across different regions?
-
 WITH
     employee_revenue AS (
         SELECT
             odr.employee_id,
-            CONCAT(emp.first_name, ' ', emp.last_name) AS employee_name,
+            CONCAT (emp.first_name, ' ', emp.last_name) AS employee_name,
             rgn.region_description AS regions,
             ROUND(
                 SUM(
@@ -388,7 +363,6 @@ ORDER BY
     regions;
 
 -- Q11: Which employees are responsible for managing the most valuable customers according to order value?
-
 WITH
     customer_order_total AS (
         SELECT
@@ -422,7 +396,7 @@ WITH
     employee_high_value_customers AS (
         SELECT
             emp.employee_id,
-            CONCAT(emp.first_name, ' ', emp.last_name) AS employee_name,
+            CONCAT (emp.first_name, ' ', emp.last_name) AS employee_name,
             COUNT(DISTINCT hvc.customer_id) AS high_value_customer_count
         FROM
             high_value_customer hvc
@@ -443,9 +417,7 @@ ORDER BY
 --------------------------------------------------
 /*---------- OPERATIONAL EFFICIENCY ------------*/
 --------------------------------------------------
-
 -- Q12: Do customer orders exhibit seasonal fluctuations, such as increased activity in certain quarters?
-
 WITH
     quarterly_revenue AS (
         SELECT
@@ -483,7 +455,6 @@ ORDER BY
     order_qtr;
 
 -- Q13: Which product categories show the highest return on investment when comparing cost vs. sales revenue?
-
 WITH
     categories_cost_revenue AS (
         SELECT
