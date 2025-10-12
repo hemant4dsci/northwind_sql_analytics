@@ -49,34 +49,44 @@ WITH
         GROUP BY
             cst.company_name
     ),
-    top_customers AS (
+    percentile_thresholds AS (
         SELECT
-            customers,
-            ROUND(total_spending, 2) AS total_spending
+            PERCENTILE_CONT(0.25) WITHIN GROUP (
+                ORDER BY
+                    total_spending
+            ) AS pct_25,
+            PERCENTILE_CONT(0.75) WITHIN GROUP (
+                ORDER BY
+                    total_spending
+            ) AS pct_75
         FROM
             customer_spending
-        WHERE -- top cusomers
-            total_spending >= (
-                SELECT
-                    PERCENTILE_CONT(0.75) WITHIN GROUP (
-                        ORDER BY
-                            total_spending
-                    )
-                FROM
-                    customer_spending
-            )
+    ),
+    customer_category_revenue AS (
+        SELECT
+            CASE
+                WHEN total_spending >= pct_75 THEN 'Top Customer'
+                WHEN total_spending >= pct_25 THEN 'Mid Customer'
+                ELSE 'Low Customer'
+            END AS customer_category,
+            ROUND(SUM(total_spending), 2) AS total_spending
+        FROM
+            customer_spending,
+            percentile_thresholds
+        GROUP BY
+            customer_category
     )
 SELECT
-    customers AS "Customers",
-    total_spending AS "Total Spending ($)",
+    customer_category AS "Customer Category",
+    total_spending AS "Total Spending",
     ROUND(
         total_spending / SUM(total_spending) OVER () * 100,
         2
-    ) AS "Spending Share (%)"
+    ) AS "Spending Share"
 FROM
-    top_customers
+    customer_category_revenue
 ORDER BY
-    total_spending DESC;
+    "Total Spending" DESC;
 
 -- Q3: Which countries or markets contribute most to revenue, and where are the opportunities for growth?
 
