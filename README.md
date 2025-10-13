@@ -8,8 +8,6 @@ By turning raw data into an easy-to-understand story about business performance,
 
 # Table of Contents
 
-# Table of Contents
-
 + [Project Objective](#project-objective)
 + [Project Files](#project-files)
   - [Data Files](#1-data-files)
@@ -51,20 +49,20 @@ Project files are as follows :
 
 ## 1. Data Files
 
-The `data/raw/` folder contains the original SQL files that form the foundation of this project.  
+The `sql_scripts/` folder contains the original SQL files that form the foundation of this project.  
 
-- `data/raw/northwind_ddl.sql` — Defines the complete **database schema** for the Northwind dataset.  
-- `data/raw/northwind_data.sql` — Contains the **raw data inserts** for all tables such as *Customers*, *Orders*, *Products*, *Suppliers*, *Employees*, and *Shippers*.  
+- `sql_scripts/northwind_ddl.sql` — Defines the complete **database schema** for the Northwind dataset.  
+- `sql_scripts/northwind_data.sql` — Contains the **raw data inserts** for all tables such as *Customers*, *Orders*, *Products*, *Suppliers*, *Employees*, and *Shippers*.  
 
-> **Folder path:** `data/raw/`
+> **Folder path:** `sql_scripts`
 
 ### 2. SQL Scripts
 
-The `sql/` folder contains all SQL-related files used for analysis.  
+The `sql_scripts/` folder contains all SQL-related files used for analysis.  
 
-- `sql/northwind_analysis.sql` — This is the **main analytical script** of the project.
+- `sql_scripts/northwind_analysis.sql` — This is the **main analytical script** of the project.
 
-> **Folder path:** `sql/`
+> **Folder path:** `sql_scripts/`
 
 ### 3. Reports
 
@@ -111,14 +109,14 @@ Follow these steps to set up and run the Northwind SQL Analytics project locally
 
 + Execute the schema file to create tables and load Data:
 
-    - Excute the `data/raw/northwind_ddl.sql` to create tables in database.
-    - After that excute `data/raw/northwind_data.sql` to insert the data in the tables.
+    - Excute the `sql_scripts/northwind_ddl.sql` to create tables in database.
+    - After that excute `sql_scripts/northwind_data.sql` to insert the data in the tables.
 
 ### 4. Run the Analysis
 
 + Execute the main SQL script to generate analytical results:
 
-    - Now execute the main sql script `sql/northwind_analysis.sql` to start the analysis.
+    - Now execute the main sql script `sql_scripts/northwind_analysis.sql` to start the analysis.
 
 
 ### 5. View reports and dashboards
@@ -134,10 +132,10 @@ Following these steps ensures a fully reproducible setup for exploring, analyzin
 The project follows a structured workflow to ensure clarity, reproducibility, and efficiency in the analytical process.  
 
 ## 1. Data Preparation
-- The **Northwind dataset** is recreated and loaded into **PostgreSQL** from raw SQL files located in the `data/raw/` directory:
+- The **Northwind dataset** is recreated and loaded into **PostgreSQL** from raw SQL files located in the `sql_scripts/` directory:
 
-    - `data/raw/northwind_ddl.sql` — contains the complete **database schema** (tables, relationships, primary & foreign keys, and constraints).  
-    - `data/raw/northwind_data.sql` — includes all **data insert statements** to populate tables with realistic business data.
+    - `sql_scripts/northwind_ddl.sql` — contains the complete **database schema** (tables, relationships, primary & foreign keys, and constraints).  
+    - `sql_scripts/northwind_data.sql` — includes all **data insert statements** to populate tables with realistic business data.
 
 - Once executed, these scripts generate a relational database representing **Northwind Traders**, a fictional company that manages product sales, customer orders, suppliers, and shipping.  
 - Key entities and relationships:
@@ -157,7 +155,7 @@ This stage ensured a **clean, normalized, and query-ready relational database** 
 
 ## 2. Analysis & Insights Generation
 - Conducted initial SQL exploration to understand relationships, keys, and data distributions.  
-- Designed and executed **analytical SQL queries** (in `sql/northwind_analysis.sql`) to answer key business questions, including:
+- Designed and executed **analytical SQL queries** (in `sql_scripts/northwind_analysis.sql`) to answer key business questions, including:
     - Revenue trends over time
 
     ```sql
@@ -391,8 +389,6 @@ northwind_sql_analytics/
 │  ├─ final/                          # Final processed data
 │  ├─ interim/                        # Intermediate or temporary datasets
 │  └─ raw/                            # Original raw SQL files for database setup
-│     ├─ northwind_data.sql           # Data insert statements for all tables
-│     └─ northwind_ddl.sql            # Database schema (DDL) definitions
 │
 ├─ logs/                              # Logs of script executions or errors
 │
@@ -412,6 +408,8 @@ northwind_sql_analytics/
 ├─ scripts/                           # Python scripts for automation, preprocessing, or ETL tasks
 │
 ├─ sql_scripts/                       # SQL queries for analysis
+│  ├─ northwind_data.sql
+│  ├─ northwind_ddl.sql
 │  └─ northwind_analysis.sql
 │
 ├─ .gitignore                         # Git configuration to exclude unnecessary files
