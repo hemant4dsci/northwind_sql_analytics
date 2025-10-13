@@ -105,3 +105,6 @@ venv/
 
 # database dbcode notebook
 *.dbcnb
+
+# pdf for linked in post
+analysis.pdf
